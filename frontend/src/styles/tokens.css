@@ -1,0 +1,117 @@
+/*
+ * Design tokens. Neutrals are tinted toward the active accent hue (--h).
+ * Accent is Iris (hue 295).
+ */
+
+:root {
+  --h: 295;
+  --accent-l: 0.52;
+  --accent-c: 0.2;
+  --accent-l-dark: 0.72;
+  --accent-c-dark: 0.15;
+  --accent-fg-l: 0.99;
+
+  --radius: 0.5rem;
+  --density: 1;
+  --row-h: calc(2.25rem * var(--density));
+  --ctl-h: calc(2rem * var(--density));
+
+  --ease-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 400ms;
+
+  /* light surfaces */
+  --background: oklch(0.99 0.003 var(--h));
+  --foreground: oklch(0.2 0.02 var(--h));
+  --surface: oklch(0.975 0.004 var(--h));
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+  --muted: oklch(0.96 0.005 var(--h));
+  --muted-foreground: oklch(0.5 0.02 var(--h));
+  --secondary: oklch(0.955 0.006 var(--h));
+  --secondary-foreground: var(--foreground);
+  --border: oklch(0.91 0.008 var(--h));
+  --input: oklch(0.88 0.01 var(--h));
+
+  --primary: oklch(var(--accent-l) var(--accent-c) var(--h));
+  --primary-foreground: oklch(var(--accent-fg-l) 0.01 var(--h));
+  --accent: oklch(0.955 0.03 var(--h));
+  --accent-foreground: oklch(0.38 0.14 var(--h));
+  --ring: oklch(0.62 0.17 var(--h));
+
+  --destructive: oklch(0.52 0.21 27);
+  --success: oklch(0.55 0.14 155);
+  --warning: oklch(0.62 0.15 70);
+  --info: oklch(0.55 0.14 235);
+  /* Darker variants for text; the base colors are for icons and fills. */
+  --success-text: oklch(0.45 0.13 155);
+  --warning-text: oklch(0.48 0.12 70);
+
+  --chart-1: oklch(0.55 0.2 var(--h));
+  --chart-2: oklch(0.62 0.14 195);
+  --chart-3: oklch(0.68 0.15 80);
+  --chart-4: oklch(0.6 0.2 330);
+  --chart-5: oklch(0.58 0.16 145);
+
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.935 0.01 var(--h));
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  --pop-shadow: 0 1px 2px oklch(0.2 0.02 var(--h) / 0.06), 0 8px 24px -4px oklch(0.2 0.02 var(--h) / 0.12);
+  --selection: oklch(0.85 0.08 var(--h));
+}
+
+.dark {
+  --background: oklch(0.16 0.012 var(--h));
+  --foreground: oklch(0.96 0.005 var(--h));
+  --surface: oklch(0.19 0.014 var(--h));
+  --card: var(--background);
+  --popover: oklch(0.22 0.016 var(--h));
+  --muted: oklch(0.24 0.014 var(--h));
+  --muted-foreground: oklch(0.7 0.02 var(--h));
+  --secondary: oklch(0.26 0.015 var(--h));
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+
+  --primary: oklch(var(--accent-l-dark) var(--accent-c-dark) var(--h));
+  --primary-foreground: oklch(0.16 0.02 var(--h));
+  --accent-fg-l: 0.16;
+  --accent: oklch(0.28 0.05 var(--h));
+  --accent-foreground: oklch(0.88 0.08 var(--h));
+  --ring: oklch(0.65 0.16 var(--h));
+
+  --destructive: oklch(0.7 0.19 22);
+  --success: oklch(0.74 0.15 155);
+  --warning: oklch(0.8 0.14 80);
+  --info: oklch(0.74 0.12 235);
+  --success-text: var(--success);
+  --warning-text: var(--warning);
+
+  --chart-1: oklch(0.72 0.16 var(--h));
+  --chart-2: oklch(0.75 0.12 195);
+  --chart-3: oklch(0.82 0.13 85);
+  --chart-4: oklch(0.72 0.17 330);
+  --chart-5: oklch(0.75 0.14 145);
+
+  --sidebar-accent: oklch(0.26 0.016 var(--h));
+  --pop-shadow: 0 0 0 1px oklch(1 0 0 / 8%), 0 12px 32px -6px oklch(0 0 0 / 0.6);
+  --selection: oklch(0.38 0.09 var(--h));
+}
+
+
+/* Touch: bigger hit areas on coarse pointers, same visual language. */
+@media (pointer: coarse) {
+  :root {
+    --ctl-h: 2.75rem;
+    --row-h: 3rem;
+  }
+}

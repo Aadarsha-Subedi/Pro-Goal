@@ -1,0 +1,8 @@
+NOT_CONFIGURED = "integrations_not_configured"
+UNKNOWN_PROVIDER = "unknown_provider"
+INTEGRATION_NOT_FOUND = "integration_not_found"
+DELIVERY_NOT_FOUND = "delivery_not_found"
+NOT_REPLAYABLE = "delivery_not_replayable"
+INTEGRATION_INACTIVE = "integration_inactive"
+INVALID_SIGNATURE = "invalid_signature"
+INVALID_KEY = "invalid_encryption_key"

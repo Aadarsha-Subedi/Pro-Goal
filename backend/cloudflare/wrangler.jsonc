@@ -1,0 +1,46 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "pro-goal",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+
+	// The Django image: Dockerfile.prod, built with the backend folder as context
+	"containers": [
+		{
+			"class_name": "BackendContainer",
+			"image": "../Dockerfile.prod",
+			"image_build_context": "..",
+			"instance_type": "basic",
+			"max_instances": 1
+		}
+	],
+	// The built frontend (`npm run build` in ../../frontend). Only /api and /admin reach the
+	// Worker (and the container); every other path is a static file, or index.html for the SPA.
+	"assets": {
+		"directory": "../../frontend/dist",
+		"not_found_handling": "single-page-application",
+		"run_worker_first": ["/api/*", "/admin/*"]
+	},
+	// Worker and container logs, shown in the dashboard (Workers Logs: billed per event)
+	"observability": {
+		"enabled": true
+	},
+
+	"durable_objects": {
+		"bindings": [{ "name": "BACKEND", "class_name": "BackendContainer" }]
+	},
+	"exports": {
+		"BackendContainer": { "type": "durable-object", "storage": "sqlite" }
+	},
+
+	// Every setting is a secret (`wrangler secret bulk secrets.json`) except the ones that are
+	// empty on purpose, because Cloudflare does not accept an empty secret. When you start
+	// using one (Slack, Sentry, SMTP, Google sign-in), delete it from here and add it as a
+	// secret instead; a name cannot be both. A name missing from both makes the Worker fail.
+	"vars": {
+		"PROJECT_MANAGEMENT_COOKIE_DOMAIN": "",
+		"PROJECT_MANAGEMENT_GOOGLE_CLIENT_ID": "321515332459-iec28tu5mngeaen0mvmsenhe4a3n3eun.apps.googleusercontent.com",
+		"PROJECT_MANAGEMENT_SENTRY_DSN": "",
+		"PROJECT_MANAGEMENT_PUBLIC_API_URL": "https://pro-goal.aadarshasubedi20.workers.dev"
+	}
+}

@@ -1,0 +1,93 @@
+name: pro-goal-backend
+
+services:
+    postgres:
+        image: postgres:18-alpine
+        container_name: ${PROJECT_MANAGEMENT_DB_CONTAINER_NAME}
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: ${PROJECT_MANAGEMENT_DB_NAME}
+            POSTGRES_USER: ${PROJECT_MANAGEMENT_DB_USER}
+            POSTGRES_PASSWORD: ${PROJECT_MANAGEMENT_DB_PASSWORD}
+        ports:
+            - '${PROJECT_MANAGEMENT_DB_PORT}:5432'
+        volumes:
+            - postgres_data:/var/lib/postgresql
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U ${PROJECT_MANAGEMENT_DB_USER} -d ${PROJECT_MANAGEMENT_DB_NAME}']
+            interval: 5s
+            timeout: 3s
+            retries: 10
+
+    redis:
+        image: redis:8-alpine
+        container_name: ${PROJECT_MANAGEMENT_REDIS_CONTAINER_NAME}
+        restart: unless-stopped
+        ports:
+            - '${PROJECT_MANAGEMENT_REDIS_PORT}:6379'
+        volumes:
+            - redis_data:/data
+        command: redis-server --appendonly yes
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 5s
+            timeout: 3s
+            retries: 10
+
+    # The two services below run the Django code inside the container (Dockerfile.dev).
+    # They reach Postgres and Redis by service name, so those two values are overridden
+    # here; everything else comes from .env.
+    api:
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        env_file: .env
+        environment: &app_environment
+            PROJECT_MANAGEMENT_DB_HOST: postgres
+            PROJECT_MANAGEMENT_DB_PORT: '5432'
+            PROJECT_MANAGEMENT_REDIS_URL: redis://redis:6379/0
+        command: sh -c "python manage.py migrate && python manage.py seed_demo_projects && python manage.py runserver 0.0.0.0:8000"
+        ports:
+            - '8000:8000'
+        healthcheck:
+            test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/')"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 20s
+        volumes:
+            - .:/app
+            - /app/.venv # keep the image's virtualenv, not the host's
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+    celery:
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        env_file: .env
+        environment: *app_environment
+        command: celery -A config worker --beat -Q default,integrations --loglevel=info
+        volumes:
+            - .:/app
+            - /app/.venv
+        depends_on:
+            api: # the api container runs the migrations the worker's scheduled tasks need
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+# Shared with the frontend compose project. Create it once: docker network create pro-goal-network
+networks:
+    default:
+        name: pro-goal-network
+        external: true
+
+volumes:
+    postgres_data:
+    redis_data:

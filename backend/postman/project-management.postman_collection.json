@@ -1,0 +1,3385 @@
+{
+  "info": {
+    "name": "Project Management API",
+    "description": "Keep in sync with the API contract (see CLAUDE.md). Run 'Get CSRF cookie' first, then Login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Django enforces CSRF on unsafe methods: send the token as X-CSRFToken.",
+          "// {{csrf_token}} is stored by \"Get CSRF cookie\"; fall back to the cookie.",
+          "const token = pm.environment.get('csrf_token') || pm.cookies.get('csrftoken');",
+          "if (token) {",
+          "    pm.request.headers.upsert({ key: 'X-CSRFToken', value: token });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "CSRF",
+      "item": [
+        {
+          "name": "Get CSRF cookie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/csrf/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "csrf",
+                ""
+              ]
+            },
+            "description": "Call first. Sets the csrftoken cookie and returns the token as data.csrf_token; the test script stores it in {{csrf_token}} and the collection pre-request script sends it as X-CSRFToken."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.csrf_token) {",
+                  "    pm.environment.set('csrf_token', body.data.csrf_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/signup/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"Ada\",\n  \"last_name\": \"Lovelace\",\n  \"display_name\": \"Ada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Neutral reply whether or not the email exists."
+          }
+        },
+        {
+          "name": "Verify email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-email/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-email",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{verification_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Resend verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-email/resend/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-email",
+                "resend",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"remember_me\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login with Google",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/google/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "google",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"{{google_id_token}}\",\n  \"remember_me\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Google redirect callback (browser flow)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "Cookie",
+                "value": "pg_google_state=abc.0"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/google/redirect/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "google",
+                "redirect",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id_token",
+                  "value": "{{google_id_token}}"
+                },
+                {
+                  "key": "state",
+                  "value": "abc.0"
+                }
+              ]
+            },
+            "description": "What Google posts after its sign-in page (response_mode=form_post). Answers 302 to /app on success or /login?google_error=... on failure. The pg_google_state cookie must equal the state field, and the token's nonce must equal the part of state before the dot."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"all_other_sessions\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Password reset request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/password/reset/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "password",
+                "reset",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Password reset confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/password/reset/confirm/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "password",
+                "reset",
+                "confirm",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"{{reset_uid}}\",\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Password change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/password/change/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "password",
+                "change",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "current_password is optional for social-only accounts."
+          }
+        },
+        {
+          "name": "Confirm email change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/email-change/confirm/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "email-change",
+                "confirm",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{email_change_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Token from the link in the email. No login needed. Signs out every session; log in again with the new address."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Me",
+      "item": [
+        {
+          "name": "Get profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/me/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Ada\",\n  \"last_name\": \"Lovelace\",\n  \"display_name\": \"Ada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Upload avatar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/avatar/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "avatar",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Multipart. JPEG, PNG or WebP, max 2 MB."
+          }
+        },
+        {
+          "name": "Delete avatar",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/avatar/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "avatar",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "List sessions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/sessions/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "sessions",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Revoke session",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/sessions/{{session_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "sessions",
+                "{{session_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Start account deletion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/delete/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "delete",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel account deletion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/delete/cancel/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "delete",
+                "cancel",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Security events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/security-events/?event_type=login_failure&limit=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "security-events",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "event_type",
+                  "value": "login_failure",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Your own account security log, newest first. Filter with event_type."
+          }
+        },
+        {
+          "name": "Request email change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/me/email/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "email",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_email\": \"new.address@example.com\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Send password, or id_token for a Google account. A confirmation link goes to the new address (check the server console in development); the old address is warned."
+          }
+        },
+        {
+          "name": "Finish tour",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/tour/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "tour",
+                ""
+              ]
+            },
+            "description": "Mark the onboarding walkthrough as done (`tour_completed` becomes true)."
+          }
+        },
+        {
+          "name": "Reset tour",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/tour/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "tour",
+                ""
+              ]
+            },
+            "description": "Reset the walkthrough so it runs again."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Apollo\",\n  \"description\": \"Moon landing\",\n  \"task_key\": \"APL\",\n  \"start_date\": \"2026-11-01\",\n  \"end_date\": \"2026-12-31\",\n  \"tags\": [\n    \"space\",\n    \"demo\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Caller becomes owner. Stores {{project_id}} and {{join_code}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) {",
+                  "    pm.environment.set('project_id', body.data.id);",
+                  "    pm.environment.set('join_code', body.data.join_code);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List my projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                ""
+              ]
+            },
+            "description": "Paginated (limit/offset). Includes the caller's role."
+          }
+        },
+        {
+          "name": "Get project",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update project",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Apollo 2\",\n  \"tags\": [\n    \"space\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Each field needs its permission (owner only for now). is_listed is owner only."
+          }
+        },
+        {
+          "name": "Archive project",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/archive/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "archive",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unarchive project",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/unarchive/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "unarchive",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Owner only. Send password, or id_token (fresh Google sign-in) for social-only accounts. 7-day undo."
+          }
+        },
+        {
+          "name": "Restore project",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/restore/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "restore",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Regenerate join code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/join-code/regenerate/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "join-code",
+                "regenerate",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Owner only, needs password or id_token. Pending requests survive."
+          }
+        },
+        {
+          "name": "Copy demo project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/copy/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "copy",
+                ""
+              ]
+            },
+            "description": "Copy a demo project (`is_demo`) into a new unlisted project you own. Optional `name`. At most 3 copies per user (`copy_limit_reached`), 5 per hour. Non-demo projects: `copy_not_allowed`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My copy\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "item": [
+        {
+          "name": "List members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/members/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "members",
+                ""
+              ]
+            },
+            "description": "Emails and full names are visible to the owner only."
+          }
+        },
+        {
+          "name": "Remove member",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/members/{{member_user_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "members",
+                "{{member_user_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reassign\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Needs member.remove. reassign maps an owned-item type to the member who inherits it; types left out become unassigned."
+          }
+        },
+        {
+          "name": "Leave project",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/leave/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "leave",
+                ""
+              ]
+            },
+            "description": "Members only. The owner must transfer ownership first."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Join requests",
+      "item": [
+        {
+          "name": "Submit join code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/join/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "join",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{join_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Wrong codes: 5 per hour per user and per IP. Stores {{join_request_id}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) { pm.environment.set('join_request_id', body.data.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List join requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/join-requests/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "join-requests",
+                ""
+              ]
+            },
+            "description": "Owner only. Optional ?status=pending|approved|rejected|expired."
+          }
+        },
+        {
+          "name": "Approve join request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/join-requests/{{join_request_id}}/approve/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "join-requests",
+                "{{join_request_id}}",
+                "approve",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preset\": \"contributor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Optional starting permissions: {\"preset\": \"contributor\"} or {\"permissions\": [\"note.create\"]}. Default none. Giving any needs permissions.manage and only codes you hold. Send {} for none."
+          }
+        },
+        {
+          "name": "Reject join request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/join-requests/{{join_request_id}}/reject/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "join-requests",
+                "{{join_request_id}}",
+                "reject",
+                ""
+              ]
+            },
+            "description": "The requester may ask again after 24 hours."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ownership transfer",
+      "item": [
+        {
+          "name": "Start ownership transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/transfer/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "transfer",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to_user\": \"{{transfer_to_user_id}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Owner only. Target must be a member. Needs password or id_token. Stores {{transfer_id}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) { pm.environment.set('transfer_id', body.data.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel ownership transfer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/transfer/cancel/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "transfer",
+                "cancel",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "List incoming transfers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/transfers/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transfers",
+                ""
+              ]
+            },
+            "description": "Pending transfers offered to the caller."
+          }
+        },
+        {
+          "name": "Accept ownership transfer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/transfers/{{transfer_id}}/accept/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transfers",
+                "{{transfer_id}}",
+                "accept",
+                ""
+              ]
+            },
+            "description": "Only the target member can accept."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Statuses",
+      "item": [
+        {
+          "name": "List statuses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/statuses/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "statuses",
+                ""
+              ]
+            },
+            "description": "Seeded: To do, In progress, In review, Done, Cancelled."
+          }
+        },
+        {
+          "name": "Create status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/statuses/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "statuses",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Blocked\",\n  \"category\": \"in_progress\",\n  \"position\": 2,\n  \"is_default\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Owner only (until feature 5). category: todo | in_progress | done. Stores {{status_id}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) { pm.environment.set('status_id', body.data.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/statuses/{{status_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "statuses",
+                "{{status_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Blocked!\",\n  \"position\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "name, category, position (renumbers siblings), is_default. A category must keep at least one status."
+          }
+        },
+        {
+          "name": "Delete status",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/statuses/{{status_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "statuses",
+                "{{status_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"move_to\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Needs move_to (another status id) when tasks use it. The default status and the last one in a category cannot be deleted."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Priorities",
+      "item": [
+        {
+          "name": "List priorities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/priorities/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "priorities",
+                ""
+              ]
+            },
+            "description": "Seeded: Low, Medium, High, Urgent (rank 1-4)."
+          }
+        },
+        {
+          "name": "Create priority",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/priorities/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "priorities",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Critical\",\n  \"position\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Owner only (until feature 5). Stores {{priority_id}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) { pm.environment.set('priority_id', body.data.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update priority",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/priorities/{{priority_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "priorities",
+                "{{priority_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Critical!\",\n  \"is_default\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete priority",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/priorities/{{priority_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "priorities",
+                "{{priority_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"move_to\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Needs move_to when tasks use it."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Create task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Write docs\",\n  \"description\": \"# Markdown\",\n  \"start_date\": \"2026-11-01\",\n  \"due_date\": \"2026-11-15\",\n  \"assignees\": [\n    \"{{member_user_id}}\"\n  ],\n  \"tags\": [\n    \"docs\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Only title is required. status and priority default to the project's defaults (send ids to override). Stores {{task_number}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) { pm.environment.set('task_number', body.data.number); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/?status={{status_id}}&priority={{priority_id}}&assignee={{member_user_id}}&tag=docs&q=docs&overdue=true&top_level=true&ordering=-due_date&limit=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "{{status_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "{{priority_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "assignee",
+                  "value": "{{member_user_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "tag",
+                  "value": "docs",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "docs",
+                  "disabled": true
+                },
+                {
+                  "key": "overdue",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "top_level",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "ordering",
+                  "value": "-due_date",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated. Filters (all optional): status, priority, assignee (ids), tag, q (title search), due_date_after, due_date_before, overdue, top_level. ordering: number|title|due_date|priority|created_at|updated_at, prefix - to reverse. meta carries server_time and server_date."
+          }
+        },
+        {
+          "name": "Get task",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                ""
+              ]
+            },
+            "description": "Addressed by number; the key (APL-1) is only for display."
+          }
+        },
+        {
+          "name": "Update task",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Write better docs\",\n  \"status\": \"{{status_id}}\",\n  \"assignees\": [],\n  \"parent\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Each field needs its permission; one 403 lists every forbidden field. parent: a task number, or null to promote a subtask. A parent cannot enter a Done status while subtasks are open."
+          }
+        },
+        {
+          "name": "Delete task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                ""
+              ]
+            },
+            "description": "Soft delete (7-day undo) that also deletes its subtasks. Creator or owner."
+          }
+        },
+        {
+          "name": "Restore task",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/restore/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "restore",
+                ""
+              ]
+            },
+            "description": "Brings back the task and the subtasks deleted with it."
+          }
+        },
+        {
+          "name": "My tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/tasks/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "tasks",
+                ""
+              ]
+            },
+            "description": "Tasks assigned to the caller across projects. Same filters, ordering and meta as the project list."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subtasks",
+      "item": [
+        {
+          "name": "List subtasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/subtasks/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "subtasks",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create subtask",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/subtasks/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "subtasks",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Subtask\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "One level only: a subtask cannot have subtasks."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "item": [
+        {
+          "name": "Create note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/notes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "notes",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Architecture\",\n  \"body\": \"Mention @[user:{{member_user_id}}]\",\n  \"tags\": [\n    \"design\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Body is raw markdown, 100 KB maximum. @[user:<id>] mentions email that member. Stores {{note_id}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) { pm.environment.set('note_id', body.data.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List notes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/notes/?q=arch&tag=design",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "notes",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "arch",
+                  "disabled": true
+                },
+                {
+                  "key": "tag",
+                  "value": "design",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated, without bodies."
+          }
+        },
+        {
+          "name": "Get note",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/notes/{{note_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "notes",
+                "{{note_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update note",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/notes/{{note_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "notes",
+                "{{note_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": 1,\n  \"title\": \"Architecture v2\",\n  \"body\": \"Updated\",\n  \"tags\": [\n    \"design\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Send the version you started from. A stale version returns 409 stale_data."
+          }
+        },
+        {
+          "name": "Delete note",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/notes/{{note_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "notes",
+                "{{note_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Note revisions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/notes/{{note_id}}/revisions/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "notes",
+                "{{note_id}}",
+                "revisions",
+                ""
+              ]
+            },
+            "description": "Newest first; one row per save."
+          }
+        },
+        {
+          "name": "List notes linked to task",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/notes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "notes",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Link note to task",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/notes/{{note_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "notes",
+                "{{note_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unlink note from task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/notes/{{note_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "notes",
+                "{{note_id}}",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "List comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/comments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "comments",
+                ""
+              ]
+            },
+            "description": "Oldest first. Deleted comments stay as placeholders with body null."
+          }
+        },
+        {
+          "name": "Create comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/comments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "comments",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Looks good @[user:{{member_user_id}}]\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Stores {{comment_id}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) { pm.environment.set('comment_id', body.data.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edit comment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/comments/{{comment_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "comments",
+                "{{comment_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Edited\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Your own comments; the owner can moderate others."
+          }
+        },
+        {
+          "name": "Delete comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/tasks/{{task_number}}/comments/{{comment_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_number}}",
+                "comments",
+                "{{comment_id}}",
+                ""
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kanban",
+      "item": [
+        {
+          "name": "Get kanban preference",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/kanban-preference/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "kanban-preference",
+                ""
+              ]
+            },
+            "description": "Defaults to group_by=status, sort_by=number."
+          }
+        },
+        {
+          "name": "Save kanban preference",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/kanban-preference/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "kanban-preference",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_by\": \"status\",\n  \"sort_by\": \"due_date\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "group_by: status|priority|assignee|tag. sort_by: due_date|priority|created_at|updated_at|number|title."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attachments",
+      "item": [
+        {
+          "name": "Request upload URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/attachments/upload-url/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "attachments",
+                "upload-url",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"target_type\": \"task\",\n  \"target\": \"{{task_number}}\",\n  \"filename\": \"spec.pdf\",\n  \"content_type\": \"application/pdf\",\n  \"size\": 12345\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "target_type: task | note | comment. target: a task number, or a note/comment id. Declare the exact size and type. Stores {{attachment_id}} and {{upload_url}}. Then PUT the file (same Content-Type, exactly that many bytes) to the URL, outside this API, and call Confirm."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data) {",
+                  "    pm.environment.set('attachment_id', body.data.attachment.id);",
+                  "    pm.environment.set('upload_url', body.data.upload.url);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirm upload",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/attachments/{{attachment_id}}/confirm/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "attachments",
+                "{{attachment_id}}",
+                "confirm",
+                ""
+              ]
+            },
+            "description": "Call after the PUT. The server checks the size, sniffs the real file type and either marks it ready (images are re-encoded first and show as processing) or deletes it."
+          }
+        },
+        {
+          "name": "List attachments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/attachments/?task={{task_number}}&note={{note_id}}&comment={{comment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "attachments",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "task",
+                  "value": "{{task_number}}",
+                  "disabled": true
+                },
+                {
+                  "key": "note",
+                  "value": "{{note_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "comment",
+                  "value": "{{comment_id}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Ready and processing files. Filter with ONE of task (number), note (id) or comment (id)."
+          }
+        },
+        {
+          "name": "Download URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/attachments/{{attachment_id}}/download/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "attachments",
+                "{{attachment_id}}",
+                "download",
+                ""
+              ]
+            },
+            "description": "Returns a signed link valid for 5 minutes. Images open inline, everything else downloads."
+          }
+        },
+        {
+          "name": "Delete attachment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/attachments/{{attachment_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "attachments",
+                "{{attachment_id}}",
+                ""
+              ]
+            },
+            "description": "The uploader or the owner. Frees quota and removes the file."
+          }
+        },
+        {
+          "name": "Project storage",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/storage/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "storage",
+                ""
+              ]
+            },
+            "description": "Project usage, quota, and breakdown by category and uploader."
+          }
+        },
+        {
+          "name": "My storage",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/storage/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "storage",
+                ""
+              ]
+            },
+            "description": "Your usage across all projects against your personal 100 MB allowance."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "Permission registry",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/permissions/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "permissions",
+                ""
+              ]
+            },
+            "description": "Every permission with label, description and group, the presets (viewer, contributor, manager) and the owner-only actions. Generated by the backend; the frontend keeps no copy."
+          }
+        },
+        {
+          "name": "Get member permissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/members/{{member_user_id}}/permissions/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "members",
+                "{{member_user_id}}",
+                "permissions",
+                ""
+              ]
+            },
+            "description": "Visible to the owner, anyone with permissions.manage, and the member themselves. Returns the held codes and the matching preset name (or null)."
+          }
+        },
+        {
+          "name": "Replace member permissions (codes)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/members/{{member_user_id}}/permissions/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "members",
+                "{{member_user_id}}",
+                "permissions",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    \"task.create\",\n    \"task.title.change\",\n    \"comment.create\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Needs permissions.manage. The whole set is replaced; every code added or removed must be one you hold yourself, otherwise 403 cannot_grant_permission. The owner cannot be targeted."
+          }
+        },
+        {
+          "name": "Replace member permissions (preset)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/members/{{member_user_id}}/permissions/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "members",
+                "{{member_user_id}}",
+                "permissions",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preset\": \"contributor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Send either preset or permissions, not both."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/health/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "health",
+                ""
+              ]
+            },
+            "description": "200 only if the database and cache respond, otherwise 503. No login needed."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Integrations",
+      "item": [
+        {
+          "name": "List integrations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                ""
+              ]
+            },
+            "description": "Health of the project's integrations (never tokens). Needs integration.logs.view or the provider's manage permission."
+          }
+        },
+        {
+          "name": "Disconnect integration",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/{{integration_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "{{integration_id}}",
+                ""
+              ]
+            },
+            "description": "Revokes the token at the provider and wipes it here. Needs the provider's manage permission."
+          }
+        },
+        {
+          "name": "Delivery log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/{{integration_id}}/deliveries/?status=failed&limit=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "{{integration_id}}",
+                "deliveries",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "failed",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Outbound deliveries and how they went. Filter with status=pending|success|failed."
+          }
+        },
+        {
+          "name": "Replay delivery",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/{{integration_id}}/deliveries/{{delivery_id}}/replay/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "{{integration_id}}",
+                "deliveries",
+                "{{delivery_id}}",
+                "replay",
+                ""
+              ]
+            },
+            "description": "Sends a failed delivery again from the start."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Slack",
+      "item": [
+        {
+          "name": "Install URL (Add to Slack)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/slack/install/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "slack",
+                "install",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"Returns {url}. Open it in the browser, approve the app in Slack, and you are redirected back to the frontend. Needs integration.slack.manage.\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List Slack channels",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/slack/channels/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "slack",
+                "channels",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"Channels the bot can see. is_member must be true to map one: invite the bot in Slack first.\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List channel mappings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/slack/mappings/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "slack",
+                "mappings",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create channel mapping",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/slack/mappings/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "slack",
+                "mappings",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"channel_id\": \"C0123456789\",\n  \"enabled_events\": [\n    \"task_created\",\n    \"task_updated\",\n    \"comment_added\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "enabled_events: task_created, task_updated, task_assigned, task_due_soon, task_overdue, comment_added, member_joined, member_removed, project_archived, join_request_created. Public channels return warn_public."
+          }
+        },
+        {
+          "name": "Update channel mapping",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/slack/mappings/{{mapping_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "slack",
+                "mappings",
+                "{{mapping_id}}",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled_events\": [\n    \"task_overdue\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete channel mapping",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/integrations/slack/mappings/{{mapping_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "integrations",
+                "slack",
+                "mappings",
+                "{{mapping_id}}",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Link my Slack account",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/me/integrations/slack/link/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "integrations",
+                "slack",
+                "link",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"Returns {url, linked_workspaces}. Open the url in the browser to sign in with Slack.\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Unlink my Slack account",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/me/integrations/slack/link/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "integrations",
+                "slack",
+                "link",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get notification preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/me/notification-preferences/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "notification-preferences",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"The five personal events with slack_dm (default true) and email (stored, inactive).\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update notification preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/me/notification-preferences/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me",
+                "notification-preferences",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preferences\": {\n    \"task_assigned\": {\n      \"slack_dm\": false\n    },\n    \"comment_added\": {\n      \"slack_dm\": true\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Partial per event; omitted fields keep their value."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Explore",
+      "item": [
+        {
+          "name": "List listed projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/explore/?q=space&tag=python&starts_after=2026-01-01&ends_before=2026-12-31&limit=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "explore",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "space",
+                  "disabled": true
+                },
+                {
+                  "key": "tag",
+                  "value": "python",
+                  "disabled": true
+                },
+                {
+                  "key": "starts_after",
+                  "value": "2026-01-01",
+                  "disabled": true
+                },
+                {
+                  "key": "ends_before",
+                  "value": "2026-12-31",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "disabled": true
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"Listed, unarchived projects you are not in. Newest listing first.\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Tag suggestions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/explore/tags/?q=py",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "explore",
+                "tags",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "py",
+                  "disabled": true
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"The most used tags among listed projects.\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Request to join a listed project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/explore/{{project_id}}/join-request/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "explore",
+                "{{project_id}}",
+                "join-request",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"Same limits as joining with a code. 404 if the project is not listed.\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Demo projects need no approval: the reply is `status: joined` and you are a viewer at once."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Activity",
+      "item": [
+        {
+          "name": "Project activity",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}/activity/?action=task.created&entity_type=task&actor={{member_user_id}}&created_after=2026-01-01T00:00:00Z&limit=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "projects",
+                "{{project_id}}",
+                "activity",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "task.created",
+                  "disabled": true
+                },
+                {
+                  "key": "entity_type",
+                  "value": "task",
+                  "disabled": true
+                },
+                {
+                  "key": "actor",
+                  "value": "{{member_user_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "created_after",
+                  "value": "2026-01-01T00:00:00Z",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "disabled": true
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "\"Holders of activity.view see everything; everyone else only their own actions.\"",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

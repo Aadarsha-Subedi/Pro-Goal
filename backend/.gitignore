@@ -1,0 +1,36 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+#Environment
+.env
+
+#Personal notes
+notes.txt
+
+#graphify
+graphify-out/
+
+# Local
+db.sqlite3
+media/
+
+# Editor
+.vscode/
+
+# Celery beat state
+.celery/
+celerybeat-schedule*
+
+# Ruff
+.ruff_cache/
+
+# Claude
+CLAUDE.md

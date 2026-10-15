@@ -1,0 +1,46 @@
+# Slack app manifest for Project Management.
+#
+# Use: api.slack.com/apps > Create New App > From a manifest > pick your workspace
+# > paste this file with YOUR_API_URL replaced by the public HTTPS address of the
+# API (the tunnel URL in development), for example https://my-dev.ngrok-free.app
+#
+# The Events URL is verified by Slack when the manifest is saved, so the API must be
+# running and reachable at YOUR_API_URL (ngrok up, server and worker started) first.
+#
+# Scopes are kept minimal on purpose: the bot posts only in channels it has been
+# invited to, so it needs neither channels:join nor channels:history.
+display_information:
+  name: Project Management
+  description: Project updates and quick task commands in Slack
+  background_color: "#2c2d30"
+features:
+  bot_user:
+    display_name: Project Management
+    always_online: false
+  slash_commands:
+    - command: /task
+      url: YOUR_API_URL/api/integrations/slack/commands/
+      description: Create a task or mark one done
+      usage_hint: create <project key> <title> | done <KEY-42>
+      should_escape: false
+oauth_config:
+  redirect_urls:
+    # "Add to Slack" for a project (bot token)
+    - YOUR_API_URL/api/integrations/slack/install/callback/
+    # "Sign in with Slack" to link a person's own account
+    - YOUR_API_URL/api/integrations/slack/link/callback/
+  scopes:
+    bot:
+      - chat:write # post messages and DMs
+      - commands # the /task slash command
+      - channels:read # list public channels to map
+      - groups:read # list private channels the bot was invited to
+settings:
+  event_subscriptions:
+    request_url: YOUR_API_URL/api/integrations/slack/events/
+    bot_events:
+      - app_uninstalled
+      - tokens_revoked
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

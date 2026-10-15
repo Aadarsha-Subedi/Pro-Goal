@@ -1,0 +1,77 @@
+/*
+ * Blueprint world for the landing and auth surfaces. Scope: add .bp to a wrapper.
+ * Structure is square (sheet, title block, tables); controls inside keep the app radius.
+ */
+.bp {
+  --bp-ground: oklch(0.975 0.012 280);
+  --bp-line: oklch(0.52 0.1 280 / 0.55);
+  --bp-line-strong: oklch(0.4 0.14 280);
+  --bp-grid: oklch(0.52 0.1 280 / 0.08);
+  --bp-ink: oklch(0.22 0.04 280);
+  --bp-paper: oklch(0.996 0.005 280);
+  --bp-muted: oklch(0.45 0.05 280);
+  background-color: var(--bp-ground);
+  background-image:
+    linear-gradient(var(--bp-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bp-grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--bp-ink);
+}
+
+.dark .bp {
+  --bp-ground: oklch(0.2 0.05 275);
+  --bp-line: oklch(0.82 0.07 280 / 0.5);
+  --bp-line-strong: oklch(0.88 0.08 280);
+  --bp-grid: oklch(0.82 0.07 280 / 0.07);
+  --bp-ink: oklch(0.95 0.015 280);
+  --bp-paper: oklch(0.165 0.045 275);
+  --bp-muted: oklch(0.78 0.04 280);
+}
+
+/* The sheet: outer margin, double border, corner ticks. */
+.bp-sheet {
+  position: relative;
+  border: 1px solid var(--bp-line-strong);
+  outline: 1px solid var(--bp-line);
+  outline-offset: 5px;
+}
+
+/* Blueprint rules and cells */
+.bp-rule { border-color: var(--bp-line); }
+.bp-rule-strong { border-color: var(--bp-line-strong); }
+.bp-muted { color: var(--bp-muted); }
+.bp-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+
+/* Title block: ruled cells, no radius */
+.bp-block { border: 1px solid var(--bp-line-strong); background: var(--bp-paper); }
+.bp-block > * + * { border-top: 1px solid var(--bp-line); }
+.bp-cell-label { font-size: 0.6875rem; line-height: 1.3; color: var(--bp-muted); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+
+/* Dimension line: ends with arrowheads, a rule between, a centered label. Measures the span it sits under. */
+.bp-dim { display: flex; align-items: center; gap: 0.25rem; color: var(--bp-ink); font-size: 0.75rem; line-height: 1; }
+.bp-dim .bp-dim-rule { height: 1.5px; flex: 1; background: var(--bp-line-strong); }
+.bp-dim svg { flex: none; color: var(--bp-line-strong); }
+
+/* Sheet reference marks: centering ticks and zone letters. Decorative, aria-hidden. */
+.bp-tick { position: absolute; background: var(--bp-line-strong); }
+.bp-zone { position: absolute; font-family: var(--font-mono); font-size: 0.6875rem; line-height: 1; color: var(--bp-muted); }
+
+/* Signed by default; the page arms boxes that start below the fold, then draws them in when reached. */
+.bp-sign path { stroke-dasharray: 24; stroke-dashoffset: 0; transition: stroke-dashoffset 500ms var(--ease-expo); }
+.bp-sign.is-armed path { stroke-dashoffset: 24; }
+@media (prefers-reduced-motion: reduce) {
+  .bp-sign.is-armed path { stroke-dashoffset: 0; }
+  .bp-sign path { transition: none; }
+}
+
+/* Standalone links: at least 24px tall everywhere, 44px on touch. Inline links in sentences are exempt. */
+.tap-target { display: inline-flex; align-items: center; min-height: 1.5rem; }
+@media (pointer: coarse) {
+  .tap-target { min-height: 2.75rem; }
+}
+
+/* Member role under a name: lower case on phones so four columns fit, small caps from sm up. */
+.bp-role { font-size: 0.6875rem; line-height: 1.3; color: var(--bp-muted); }
+@media (min-width: 640px) {
+  .bp-role { text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
+}

@@ -1,0 +1,17 @@
+import { describe, expect, it } from "vitest"
+import { ApiError } from "@/lib/api"
+import { projectError } from "./errors"
+
+const files = import.meta.glob("../../../../backend/projects/constants/error_codes.py", { query: "?raw", import: "default", eager: true }) as Record<string, string>
+
+// Every code the backend can answer with must read as a plain sentence, never the generic fallback.
+describe("backend error codes", () => {
+  it("are all mapped", () => {
+    const source = Object.values(files)[0]
+    if (!source) return // backend checkout not beside the frontend
+    const codes = [...source.matchAll(/^[A-Z_]+ = "([a-z_]+)"/gm)].map((m) => m[1])
+    expect(codes.length).toBeGreaterThan(20)
+    const unmapped = codes.filter((c) => projectError(new ApiError(400, c, "x")) === "Something went wrong. Try again.")
+    expect(unmapped).toEqual([])
+  })
+})

@@ -1,0 +1,38 @@
+name: pro-goal-frontend
+
+services:
+    # Vite dev server with hot reload: docker compose up --build
+    frontend:
+        container_name: pro-goal-frontend
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+        environment:
+            # The backend's api service, reached over pro-goal-network
+            DEV_API_PROXY_TARGET: http://api:8000
+        ports:
+            - '3000:3000'
+        volumes:
+            - .:/app
+            - /app/node_modules # keep the image's modules, not the host's
+
+    # The production image on a local port, to check it works: docker compose --profile prod up --build frontend-prod
+    frontend-prod:
+        profiles: ['prod']
+        container_name: pro-goal-frontend-prod
+        build:
+            context: .
+            dockerfile: Dockerfile.prod
+            args:
+                VITE_API_BASE: ${VITE_API_BASE?Set VITE_API_BASE in .env}
+                VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID?Set VITE_GOOGLE_CLIENT_ID in .env}
+        environment:
+            API_UPSTREAM: http://api:8000
+        ports:
+            - '8080:80'
+
+# Shared with the backend compose project. Create it once: docker network create pro-goal-network
+networks:
+    default:
+        name: pro-goal-network
+        external: true

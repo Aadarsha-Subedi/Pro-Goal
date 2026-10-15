@@ -1,0 +1,14 @@
+<!doctype html>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<div
+	id="g_id_onload"
+	data-client_id="321515332459-iec28tu5mngeaen0mvmsenhe4a3n3eun.apps.googleusercontent.com"
+	data-callback="onToken"
+></div>
+<div class="g_id_signin"></div>
+<textarea id="out" rows="12" cols="80"></textarea>
+<script>
+	function onToken(r) {
+		document.getElementById('out').value = r.credential;
+	}
+</script>

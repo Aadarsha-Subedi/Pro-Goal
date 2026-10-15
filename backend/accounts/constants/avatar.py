@@ -1,0 +1,6 @@
+ALLOWED_FORMATS = frozenset({"JPEG", "PNG", "WEBP"})
+STORAGE_KEY = "avatars/{user_id}/{file_id}.webp"
+OUTPUT_FORMAT = "WEBP"
+OUTPUT_CONTENT_TYPE = "image/webp"
+OUTPUT_QUALITY = 85
+GOOGLE_AVATAR_TIMEOUT_SECONDS = 5

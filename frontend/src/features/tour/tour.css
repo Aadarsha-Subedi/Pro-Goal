@@ -1,0 +1,48 @@
+/* driver.js, restyled to the app's tokens: flat surface, one hairline, one accent. */
+.driver-popover.pg-tour {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 0.5rem);
+  box-shadow: none;
+  max-width: 20rem;
+  font-family: inherit;
+}
+.driver-popover.pg-tour .driver-popover-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.driver-popover.pg-tour .driver-popover-description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+.driver-popover.pg-tour .driver-popover-progress-text {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+.driver-popover.pg-tour .driver-popover-footer button {
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 0.375rem);
+  text-shadow: none;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+}
+.driver-popover.pg-tour .driver-popover-next-btn,
+.driver-popover.pg-tour .driver-popover-close-btn {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: transparent;
+}
+.driver-popover.pg-tour .driver-popover-close-btn {
+  background: transparent;
+  color: var(--muted-foreground);
+}
+.driver-popover.pg-tour .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: var(--popover); }
+.driver-popover.pg-tour .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: var(--popover); }
+.driver-popover.pg-tour .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: var(--popover); }
+.driver-popover.pg-tour .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: var(--popover); }
+@media (prefers-reduced-motion: reduce) {
+  .driver-popover.pg-tour, .driver-overlay { transition: none !important; animation: none !important; }
+}

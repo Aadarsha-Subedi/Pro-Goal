@@ -1,0 +1,12 @@
+.git
+.impeccable
+.tanstack
+node_modules
+dist
+.env
+.env.*
+!.env.example
+*.log
+Dockerfile*
+docker-compose.yml
+*.md
