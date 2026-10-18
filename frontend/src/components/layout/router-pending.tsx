@@ -5,7 +5,7 @@ import { BootScreen } from "@/components/patterns/boot-screen"
 let outsideApp = true
 export const setOutsideApp = (value: boolean) => { outsideApp = value }
 
-const SLOW_AFTER_MS = 8000
+const SLOW_AFTER_MS = 25000
 
 /**
  * What shows while a route loads. A refresh, a reload and the first step into the app get the boot screen
