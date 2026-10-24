@@ -11,7 +11,9 @@
 			"image": "../Dockerfile.prod",
 			"image_build_context": "..",
 			"instance_type": "basic",
-			"max_instances": 1
+			"max_instances": 1,
+			// Run in Asia Pacific (placement otherwise picks the nearest location with the image, which was Miami)
+			"constraints": { "regions": ["APAC"] }
 		}
 	],
 	// The built frontend (`npm run build` in ../../frontend). Only /api and /admin reach the
