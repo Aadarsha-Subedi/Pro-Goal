@@ -22,8 +22,11 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY . .
 
+# COPY keeps host file modes (settings.py is 600 locally), so make sources
+# readable by the non-root runtime user.
 # settings.py creates .celery/ at import time, so the runtime user must own it
 RUN useradd --system --create-home app \
+    && chmod -R a+rX /app \
     && mkdir -p /app/.celery \
     && chown -R app:app /app/.celery
 USER app
